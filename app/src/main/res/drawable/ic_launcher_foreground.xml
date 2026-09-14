@@ -1,0 +1,34 @@
+<!-- Logo de Horas: un círculo con degradé "día → noche" (los mismos tonos del
+     acento Nocturne, #9184D9 a #B5ABFC) atravesado por las agujas de un reloj.
+     Es el propio concepto de la app: horas comunes vs. horas nocturnas. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path android:pathData="M54,24 A30,30 0 1,1 53.9,24 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="24" android:startY="54"
+                android:endX="84" android:endY="54"
+                android:startColor="#9184D9"
+                android:endColor="#B5ABFC" />
+        </aapt:attr>
+    </path>
+
+    <!-- aguja horaria -->
+    <path
+        android:pathData="M54,54 L54,41"
+        android:strokeColor="#161826"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+    <!-- aguja de minutos -->
+    <path
+        android:pathData="M54,54 L74,54"
+        android:strokeColor="#161826"
+        android:strokeWidth="7"
+        android:strokeLineCap="round" />
+</vector>

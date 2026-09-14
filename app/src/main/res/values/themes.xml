@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.Horas" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/nocturne_bg</item>
+        <item name="android:statusBarColor">@color/nocturne_bg</item>
+        <item name="android:navigationBarColor">@color/nocturne_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

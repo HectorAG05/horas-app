@@ -1,0 +1,7 @@
+<resources>
+    <!-- Tomados 1:1 de los tokens Nocturne (styles.css del design system) -->
+    <color name="nocturne_bg">#161826</color>
+    <color name="nocturne_surface">#232532</color>
+    <color name="nocturne_text">#E9E9ED</color>
+    <color name="nocturne_accent">#9184D9</color>
+</resources>

@@ -1,0 +1,496 @@
+<title>Horas</title>
+<meta name="theme-color" content="#161826">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* ---- Nocturne design tokens (from the source design system) ---- */
+:root{
+  --color-bg:#161826;
+  --color-surface:#232532;
+  --color-text:#e9e9ed;
+  --color-accent:#9184d9;
+  --color-accent-400:#b5abfc;
+  --color-accent-800:#423a6a;
+  --color-divider:color-mix(in srgb, #e9e9ed 16%, transparent);
+  --font-heading:"Inter",system-ui,sans-serif;
+  --font-heading-weight:500;
+  --font-body:"Inter",system-ui,sans-serif;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:14px;
+  --shadow-lg:0 0 0 1px #9397ab, 0 16px 40px rgba(0,0,0,.65);
+}
+/* Nocturne is a dark-native system by design (no light tokens exist upstream) —
+   committed to a single theme on purpose, painted explicitly either way. */
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:contain}
+button{font:inherit}
+h1,h2,h3,h4{font-family:var(--font-heading);font-weight:var(--font-heading-weight);margin:0}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+.tnum{font-variant-numeric:tabular-nums}
+
+#app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
+
+/* header */
+.hdr{padding:calc(env(safe-area-inset-top,0px) + 18px) 18px 8px;display:flex;align-items:baseline;gap:10px;flex:none}
+.hdr .title{font-family:var(--font-heading);font-weight:600;font-size:21px;letter-spacing:-0.02em}
+.hdr .period{margin-left:auto;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent)}
+
+/* scroll area */
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:6px 18px calc(96px + env(safe-area-inset-bottom,0px));scrollbar-width:none}
+.scroll::-webkit-scrollbar{width:0}
+.stack{display:flex;flex-direction:column;gap:14px}
+
+/* hero pay card */
+.hero{padding:16px;border-radius:var(--radius-lg);background:linear-gradient(160deg,#232532,#1c1e2c);box-shadow:0 0 0 1px #3f424d}
+.eyebrow{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent)}
+.hero-amount{font-family:var(--font-heading);font-weight:600;font-size:36px;line-height:1.1;letter-spacing:-.03em;margin-top:8px}
+.fade-rule{height:1px;margin:14px 0 12px;background:linear-gradient(to right,transparent,rgba(233,233,237,.16) 32px,rgba(233,233,237,.16) calc(100% - 32px),transparent)}
+.hero-cols{display:flex;gap:14px}
+.hero-col{flex:1}
+.muted{color:rgba(233,233,237,.5)}
+.label-sm{font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.hero-vsep{width:1px;background:rgba(233,233,237,.12)}
+
+/* stat tiles */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{padding:11px 12px;border-radius:var(--radius-md);background:var(--color-surface)}
+.tile-val{font-family:var(--font-heading);font-weight:600;font-size:22px;margin-top:2px}
+
+/* day rows */
+.row-head{display:flex;align-items:baseline;margin-bottom:6px}
+.row-head .count{margin-left:auto;font-size:11px;color:rgba(233,233,237,.45)}
+.section-label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(233,233,237,.6)}
+.day-row{display:flex;align-items:center;gap:12px;padding:10px 2px;cursor:pointer;background:linear-gradient(to right,transparent,rgba(233,233,237,.08) 24px,rgba(233,233,237,.08) calc(100% - 24px),transparent) no-repeat bottom / 100% 1px}
+.day-row:active{background-color:rgba(233,233,237,.04)}
+.day-dd{width:34px;text-align:center;flex:none}
+.day-dow{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:rgba(233,233,237,.45)}
+.day-num{font-family:var(--font-heading);font-weight:600;font-size:17px;line-height:1.1}
+.day-mid{flex:1;min-width:0}
+.day-range{font-size:14px}
+.day-detail{font-size:11px;color:rgba(233,233,237,.5)}
+.day-side{text-align:right;flex:none}
+.day-hours{font-size:14px}
+.day-pay{font-size:11px;color:rgba(233,233,237,.5)}
+.empty-note{font-size:13px;color:rgba(233,233,237,.5);padding:20px 2px;text-align:center}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:var(--font-heading);font-weight:var(--font-heading-weight);font-size:14px;line-height:1.2;color:var(--color-text);background:transparent;border:1px solid transparent;padding:10px 14px;border-radius:var(--radius-md);-webkit-user-select:none;user-select:none}
+.btn-primary{color:var(--color-accent);border-color:var(--color-accent)}
+.btn-primary:active{background:color-mix(in srgb, var(--color-accent) 22%, transparent)}
+.btn-secondary{border-color:var(--color-divider)}
+.btn-secondary:active{background:color-mix(in srgb, var(--color-text) 14%, transparent)}
+.btn-ghost{color:var(--color-accent);padding-inline:4px;border:none}
+.btn-ghost:active{background:color-mix(in srgb, var(--color-accent) 18%, transparent)}
+.btn-block{width:100%}
+
+/* calendar */
+.cal-hint{font-size:12px;color:rgba(233,233,237,.55);line-height:1.5}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-head{text-align:center;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:rgba(233,233,237,.4);padding-bottom:2px}
+.cal-cell{border-radius:var(--radius-md);padding:6px 4px;min-height:52px;display:flex;flex-direction:column;justify-content:space-between}
+.cal-cell.has{cursor:pointer}
+.cal-num{font-size:12px;text-align:right}
+.cal-hours{font-size:11px;font-family:var(--font-heading);font-weight:600}
+.legend{display:flex;gap:14px;font-size:11px;color:rgba(233,233,237,.5);flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px}
+.swatch{width:9px;height:9px;border-radius:3px;display:block}
+
+/* month */
+.table{width:100%;border-collapse:collapse;font-size:14px}
+.table th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(233,233,237,.6);padding:8px 6px;background:linear-gradient(to right,transparent,var(--color-divider) 24px,var(--color-divider) calc(100% - 24px),transparent) no-repeat bottom / 100% 1px}
+.table td{padding:8px 6px;background:linear-gradient(to right,transparent,rgba(233,233,237,.08) 24px,rgba(233,233,237,.08) calc(100% - 24px),transparent) no-repeat bottom / 100% 1px}
+.pay-note{font-size:11px;color:rgba(233,233,237,.45)}
+.breakdown-row{display:flex;align-items:center;gap:10px;padding:9px 2px;background:linear-gradient(to right,transparent,rgba(233,233,237,.08) 24px,rgba(233,233,237,.08) calc(100% - 24px),transparent) no-repeat bottom / 100% 1px}
+.breakdown-label{flex:1;font-size:13px}
+.breakdown-qty{font-size:12px;color:rgba(233,233,237,.5)}
+.breakdown-amt{font-size:13px;width:92px;text-align:right}
+
+/* settings */
+.field label{display:block;font-size:12px;margin-bottom:5px;color:rgba(233,233,237,.7)}
+.input{width:100%;min-height:40px;padding:8px 11px;font:inherit;font-size:15px;color:var(--color-text);caret-color:var(--color-accent);background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-md)}
+.input:focus-visible{border-color:var(--color-accent);outline:none}
+.help-text{font-size:12px;color:rgba(233,233,237,.55);line-height:1.55}
+.radio{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:14px}
+.radio input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.radio .dot{width:16px;height:16px;flex:none;border-radius:50%;border:1.5px solid var(--color-divider)}
+.radio input:checked + .dot{border-color:var(--color-accent);background:var(--color-accent);box-shadow:inset 0 0 0 4px var(--color-bg)}
+
+/* bottom nav */
+.tabbar{position:absolute;left:0;right:0;bottom:0;padding:8px 10px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,#161826 62%,rgba(22,24,38,0));display:flex;gap:2px;flex:none}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;border-radius:var(--radius-md);border:none;background:transparent}
+.tab svg{width:21px;height:21px;display:block}
+.tab span{font-size:10px;letter-spacing:.03em}
+
+/* sheet */
+.sheet-backdrop{position:absolute;inset:0;background:rgba(10,11,18,.6);z-index:80}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:90;background:var(--color-surface);border-radius:14px 14px 0 0;box-shadow:var(--shadow-lg);padding:16px 18px calc(24px + env(safe-area-inset-bottom,0px));animation:sheetUp .18s ease-out;max-height:88%;overflow-y:auto}
+@keyframes sheetUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sheet-head{display:flex;align-items:baseline;margin-bottom:12px}
+.sheet-title{font-family:var(--font-heading);font-weight:600;font-size:19px}
+.sheet-times{display:flex;gap:10px}
+.sheet-flags{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.sheet-summary{margin-top:14px;padding:12px;border-radius:var(--radius-md);background:rgba(233,233,237,.04);display:flex;gap:12px}
+.sheet-summary>div{flex:1}
+.sheet-summary .to-pay{text-align:right}
+.sheet-summary .amt{font-family:var(--font-heading);font-weight:600;font-size:20px}
+.sheet-actions{display:flex;gap:8px;margin-top:14px}
+
+@media (prefers-reduced-motion: reduce){.sheet{animation:none}}
+</style>
+
+<div id="app" role="application" aria-label="Contador de horas"></div>
+
+<script>
+'use strict';
+const DOW = ['dom','lun','mar','mié','jue','vie','sáb'];
+const MON = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MON3 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+function todayKey(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+// monoline tab icons (no icon-font dependency — inline SVG, currentColor)
+const ICONS = {
+  money: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.4-.7-1.3-1.2-2.5-1.2-1.7 0-3 .9-3 2s1.3 1.8 3 2 3 .9 3 2-1.3 2-3 2c-1.2 0-2.1-.5-2.5-1.2"/><path d="M12 6.5v11"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17"/><path d="M8 3v3.2M16 3v3.2"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5V13"/><path d="M12 20.5V6.5"/><path d="M20 20.5V10"/><path d="M3 20.5h18"/></svg>',
+  sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h9M17 6.5h3"/><circle cx="14.5" cy="6.5" r="2"/><path d="M4 12h3M11 12h9"/><circle cx="8.5" cy="12" r="2"/><path d="M4 17.5h9M17 17.5h3"/><circle cx="14.5" cy="17.5" r="2"/></svg>',
+};
+
+const App = {
+  root: null,
+  now: new Date(),
+  today: '',
+  state: {
+    view: 'quincena',
+    entries: {},
+    sheet: null,
+    draft: { start: '14:00', end: '22:00', holiday: false, holidayNext: false },
+    rate: 5700, night: 400, extraPct: 50, holPct: 100,
+  },
+
+  init() {
+    this.today = todayKey(this.now);
+    this.loadSettings();
+    this.loadEntries();
+    this.root = document.getElementById('app');
+    this.root.addEventListener('click', (e) => this.onClick(e));
+    this.root.addEventListener('change', (e) => this.onChange(e));
+    this.render();
+  },
+
+  loadSettings() {
+    try {
+      const s = JSON.parse(localStorage.getItem('horas.settings.v1') || 'null');
+      if (s) Object.assign(this.state, s);
+    } catch (e) {}
+  },
+  saveSettings() {
+    const { rate, night, extraPct, holPct } = this.state;
+    try { localStorage.setItem('horas.settings.v1', JSON.stringify({ rate, night, extraPct, holPct })); } catch (e) {}
+  },
+  loadEntries() {
+    // primera vez / instalación nueva: sin datos guardados todavía → arranca
+    // genuinamente vacía, nunca con turnos inventados (ver vista "quincena",
+    // que ya muestra "Sin días cargados en esta quincena todavía.").
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem('horas.entries.v2') || 'null'); } catch (e) {}
+    this.state.entries = saved || {};
+  },
+  saveEntries() { try { localStorage.setItem('horas.entries.v2', JSON.stringify(this.state.entries)); } catch (e) {} },
+
+  set(patch) { Object.assign(this.state, patch); this.render(); },
+
+  // ---- date helpers ----
+  dateOf(k) { const p = k.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); },
+  keyOf(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); },
+  fmtShort(d) { return DOW[d.getDay()] + ' ' + d.getDate() + ' ' + MON3[d.getMonth()]; },
+  lastDay(y, m) { return new Date(y, m + 1, 0).getDate(); },
+  period(k) {
+    const d = this.dateOf(k), y = d.getFullYear(), m = d.getMonth();
+    if (d.getDate() <= 15) return { start: new Date(y, m, 1), end: new Date(y, m, 15) };
+    return { start: new Date(y, m, 16), end: new Date(y, m, this.lastDay(y, m)) };
+  },
+  payday(end) {
+    let d = end, c = 0;
+    while (c < 4) { d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1); const w = d.getDay(); if (w !== 0 && w !== 6) c++; }
+    return d;
+  },
+  money(n) { return '$ ' + Math.round(n).toLocaleString('es-AR'); },
+  hrs(n) { const h = Math.floor(n + 1e-9), m = Math.round((n - h) * 60); return m ? h + ' h ' + m + "'" : h + ' h'; },
+
+  // ---- pay math: el plus feriado depende únicamente del check "Feriado",
+  // nunca del día de la semana — un domingo sin marcar es una jornada normal ----
+  calc(key, e) {
+    if (!e || !e.start || !e.end) return null;
+    const ps = e.start.split(':').map(Number), pe = e.end.split(':').map(Number);
+    let s = ps[0] * 60 + ps[1], en = pe[0] * 60 + pe[1];
+    if (en <= s) en += 1440;
+    const special0 = !!e.holiday;
+    const special1 = !!e.holidayNext;
+    let nm = 0, hm = 0;
+    for (let m = s; m < en; m++) {
+      const h = Math.floor((m % 1440) / 60);
+      if (h >= 21 || h < 5) nm++;
+      if ((m >= 1440 ? special1 : special0)) hm++;
+    }
+    const hours = (en - s) / 60, nightH = nm / 60, holH = hm / 60;
+    const extra = Math.max(0, hours - 8);
+    const { rate, night, extraPct, holPct } = this.state;
+    const base = hours * rate;
+    const pay = base + nightH * night + extra * rate * (extraPct / 100) + holH * rate * (holPct / 100);
+    return { hours, nightH, extra, holH, pay, base };
+  },
+  totals(from, to) {
+    const t = { hours: 0, nightH: 0, extra: 0, holH: 0, pay: 0, base: 0, days: 0 };
+    const es = this.state.entries || {};
+    Object.keys(es).forEach((k) => {
+      const d = this.dateOf(k);
+      if (d < from || d > to) return;
+      const c = this.calc(k, es[k]);
+      if (!c) return;
+      t.days++; t.hours += c.hours; t.nightH += c.nightH; t.extra += c.extra; t.pay += c.pay; t.base += c.base; t.holH += c.holH;
+    });
+    return t;
+  },
+
+  openSheet(key) {
+    const e = (this.state.entries || {})[key] || {};
+    this.set({ sheet: key, draft: { start: e.start || '14:00', end: e.end || '22:00', holiday: !!e.holiday, holidayNext: !!e.holidayNext } });
+  },
+  closeSheet() { this.set({ sheet: null }); },
+  saveDraft() {
+    const n = Object.assign({}, this.state.entries);
+    n[this.state.sheet] = Object.assign({}, this.state.draft);
+    this.state.entries = n; this.saveEntries();
+    this.set({ sheet: null });
+  },
+  deleteDraft() {
+    const n = Object.assign({}, this.state.entries);
+    delete n[this.state.sheet];
+    this.state.entries = n; this.saveEntries();
+    this.set({ sheet: null });
+  },
+
+  // ---- events (delegated; el DOM completo se re-renderiza sólo en "change", nunca en cada tecla) ----
+  onClick(e) {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const a = el.dataset.action;
+    if (a === 'go') this.set({ view: el.dataset.view });
+    else if (a === 'open') this.openSheet(el.dataset.key);
+    else if (a === 'new') this.openSheet(this.today);
+    else if (a === 'close') this.closeSheet();
+    else if (a === 'save') this.saveDraft();
+    else if (a === 'delete') this.deleteDraft();
+    else if (a === 'reset') { this.set({ rate: 5700, night: 400, extraPct: 50, holPct: 100 }); this.saveSettings(); }
+  },
+  onChange(e) {
+    const t = e.target, id = t.id;
+    const num = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) ? n : 0; };
+    if (id === 'inp-rate') { this.state.rate = num(t.value); this.saveSettings(); this.render(); }
+    else if (id === 'inp-night') { this.state.night = num(t.value); this.saveSettings(); this.render(); }
+    else if (id === 'inp-extra') { this.state.extraPct = num(t.value); this.saveSettings(); this.render(); }
+    else if (id === 'inp-hol') { this.state.holPct = num(t.value); this.saveSettings(); this.render(); }
+    else if (id === 'inp-start') { this.state.draft.start = t.value; this.render(); }
+    else if (id === 'inp-end') { this.state.draft.end = t.value; this.render(); }
+    else if (id === 'inp-holflag') { this.state.draft.holiday = t.checked; this.render(); }
+    else if (id === 'inp-holnextflag') { this.state.draft.holidayNext = t.checked; this.render(); }
+  },
+
+  // ---- render ----
+  render() { this.root.innerHTML = this.shell(); },
+
+  shell() {
+    const st = this.state;
+    const per = this.period(this.today);
+    return `
+      <div class="hdr">
+        <div class="title">Horas</div>
+        <div class="period">${per.start.getDate()}–${per.end.getDate()} ${MON3[per.start.getMonth()]}</div>
+      </div>
+      <div class="scroll">${
+        st.view === 'quincena' ? this.viewQuincena() :
+        st.view === 'cal' ? this.viewCal() :
+        st.view === 'mes' ? this.viewMes() : this.viewSet()
+      }</div>
+      ${this.tabbar()}
+      ${st.sheet ? this.sheet() : ''}
+    `;
+  },
+
+  tabbar() {
+    const st = this.state;
+    const tab = (view, icon, label) => `
+      <button class="tab" data-action="go" data-view="${view}" style="color:${st.view === view ? 'var(--color-accent)' : 'rgba(233,233,237,.45)'}">
+        ${ICONS[icon]}<span>${label}</span>
+      </button>`;
+    return `<div class="tabbar">
+      ${tab('quincena', 'money', 'Quincena')}
+      ${tab('cal', 'calendar', 'Calendario')}
+      ${tab('mes', 'chart', 'Mes')}
+      ${tab('set', 'sliders', 'Ajustes')}
+    </div>`;
+  },
+
+  viewQuincena() {
+    const per = this.period(this.today);
+    const cut = per.end, pay = this.payday(cut);
+    const t = this.totals(per.start, per.end);
+    const today = this.dateOf(this.today);
+    const daysToCut = Math.round((cut - today) / 86400000);
+    const cutTxt = daysToCut > 1 ? 'faltan ' + daysToCut + ' días' : daysToCut === 1 ? 'falta 1 día' : daysToCut === 0 ? 'el corte es hoy' : 'quincena cerrada';
+
+    const es = this.state.entries || {};
+    const keys = Object.keys(es).filter((k) => { const d = this.dateOf(k); return d >= per.start && d <= per.end; }).sort().reverse();
+    const rows = keys.map((k) => {
+      const c = this.calc(k, es[k]); const d = this.dateOf(k);
+      const bits = [];
+      if (c.nightH > 0) bits.push(this.hrs(c.nightH) + ' noct.');
+      if (c.extra > 0) bits.push(this.hrs(c.extra) + ' extra');
+      if (c.holH > 0) bits.push(this.hrs(c.holH) + ' feriado');
+      return `<div class="day-row" data-action="open" data-key="${k}">
+        <div class="day-dd"><div class="day-dow">${DOW[d.getDay()]}</div><div class="day-num tnum">${d.getDate()}</div></div>
+        <div class="day-mid"><div class="day-range tnum">${es[k].start} – ${es[k].end}</div><div class="day-detail">${bits.length ? bits.join(' · ') : 'jornada normal'}</div></div>
+        <div class="day-side"><div class="day-hours tnum">${this.hrs(c.hours)}</div><div class="day-pay tnum">${this.money(c.pay)}</div></div>
+      </div>`;
+    }).join('') || `<div class="empty-note">Sin días cargados en esta quincena todavía.</div>`;
+
+    return `<div class="stack">
+      <div class="hero">
+        <div class="eyebrow">Próximo cobro</div>
+        <div class="hero-amount tnum">${this.money(t.pay)}</div>
+        <div class="fade-rule"></div>
+        <div class="hero-cols">
+          <div class="hero-col"><div class="label-sm muted">Fecha de pago</div><div style="margin-top:3px">${this.fmtShort(pay)}</div><div class="muted" style="font-size:11px;margin-top:2px">4º día hábil del corte</div></div>
+          <div class="hero-vsep"></div>
+          <div class="hero-col"><div class="label-sm muted">Corte</div><div style="margin-top:3px">${this.fmtShort(cut)}</div><div class="muted" style="font-size:11px;margin-top:2px">${cutTxt}</div></div>
+        </div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="label-sm muted">Total horas</div><div class="tile-val tnum">${this.hrs(t.hours)}</div></div>
+        <div class="tile"><div class="label-sm muted">Nocturnas</div><div class="tile-val tnum" style="color:var(--color-accent-400)">${this.hrs(t.nightH)}</div></div>
+        <div class="tile"><div class="label-sm muted">Extra (+8h)</div><div class="tile-val tnum">${this.hrs(t.extra)}</div></div>
+        <div class="tile"><div class="label-sm muted">Feriado</div><div class="tile-val tnum">${this.hrs(t.holH)}</div></div>
+      </div>
+      <div>
+        <div class="row-head"><div class="section-label">Días cargados</div><div class="count">${t.days} días</div></div>
+        ${rows}
+      </div>
+      <button class="btn btn-primary btn-block" data-action="new">＋ Cargar día</button>
+    </div>`;
+  },
+
+  viewCal() {
+    const per = this.period(this.today);
+    const es = this.state.entries || {};
+    const lead = (per.start.getDay() + 6) % 7;
+    let cells = '';
+    for (let i = 0; i < lead; i++) cells += `<div class="cal-cell"></div>`;
+    for (let day = per.start.getDate(); day <= per.end.getDate(); day++) {
+      const d = new Date(per.start.getFullYear(), per.start.getMonth(), day);
+      const k = this.keyOf(d), c = this.calc(k, es[k]);
+      const ring = k === this.today ? 'box-shadow:0 0 0 1px var(--color-accent)' : '';
+      const bg = c ? 'background:var(--color-accent-800)' : 'background:var(--color-surface)';
+      const numColor = d.getDay() === 0 ? 'color:var(--color-accent-400)' : 'color:rgba(233,233,237,.65)';
+      // todo día del período es tocable (tenga o no horas ya cargadas) —
+      // es la forma de elegir un día puntual y cargarle un turno por primera vez.
+      cells += `<div class="cal-cell has" data-action="open" data-key="${k}" style="${bg};${ring};cursor:pointer">
+        <div class="cal-num tnum" style="${numColor}">${day}</div>
+        <div class="cal-hours tnum">${c ? this.hrs(c.hours) : ''}</div>
+      </div>`;
+    }
+    return `<div class="stack">
+      <div class="cal-hint">Tocá cualquier día de la quincena para cargar o editar el turno. El corte es el ${per.end.getDate()} de ${MON[per.end.getMonth()]}.</div>
+      <div class="cal-grid">
+        ${['lun','mar','mié','jue','vie','sáb','dom'].map((h) => `<div class="cal-head">${h}</div>`).join('')}
+        ${cells}
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="swatch" style="background:var(--color-accent-800)"></span>con horas</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--color-surface)"></span>sin cargar</div>
+        <div class="legend-item"><span class="swatch" style="box-shadow:0 0 0 1px var(--color-accent)"></span>hoy</div>
+      </div>
+    </div>`;
+  },
+
+  viewMes() {
+    const today = this.dateOf(this.today);
+    const y = today.getFullYear(), m = today.getMonth();
+    const q1 = { start: new Date(y, m, 1), end: new Date(y, m, 15) };
+    const q2 = { start: new Date(y, m, 16), end: new Date(y, m, this.lastDay(y, m)) };
+    const t1 = this.totals(q1.start, q1.end), t2 = this.totals(q2.start, q2.end);
+    const mt = { hours: t1.hours + t2.hours, pay: t1.pay + t2.pay, nightH: t1.nightH + t2.nightH, extra: t1.extra + t2.extra, base: t1.base + t2.base, holH: t1.holH + t2.holH };
+    const st = this.state;
+    const qRow = (label, q, tt) => `<tr><td><div>${label}</div><div class="pay-note">paga ${this.fmtShort(this.payday(q.end))}</div></td><td class="tnum">${this.hrs(tt.hours)}</td><td class="tnum">${this.money(tt.pay)}</td></tr>`;
+    const breakdown = [
+      { label: 'Horas base', qty: this.hrs(mt.hours), amount: this.money(mt.base) },
+      { label: 'Plus nocturno', qty: this.hrs(mt.nightH), amount: this.money(mt.nightH * st.night) },
+      { label: 'Horas extra +' + st.extraPct + '%', qty: this.hrs(mt.extra), amount: this.money(mt.extra * st.rate * st.extraPct / 100) },
+      { label: 'Feriado +' + st.holPct + '%', qty: this.hrs(mt.holH), amount: this.money(mt.holH * st.rate * st.holPct / 100) },
+    ];
+    return `<div class="stack">
+      <div class="hero">
+        <div class="eyebrow">Mes · ${MON[m]} ${y}</div>
+        <div class="hero-amount tnum" style="font-size:32px">${this.money(mt.pay)}</div>
+        <div class="muted" style="font-size:12px;margin-top:4px">${this.hrs(mt.hours)} en total</div>
+      </div>
+      <table class="table">
+        <thead><tr><th>Quincena</th><th>Horas</th><th>Cobro</th></tr></thead>
+        <tbody>${qRow('1 – 15 ' + MON3[m], q1, t1)}${qRow('16 – ' + q2.end.getDate() + ' ' + MON3[m], q2, t2)}</tbody>
+      </table>
+      <div>
+        <div class="section-label" style="margin-bottom:6px">Desglose del mes</div>
+        ${breakdown.map((b) => `<div class="breakdown-row"><div class="breakdown-label">${b.label}</div><div class="breakdown-qty tnum">${b.qty}</div><div class="breakdown-amt tnum">${b.amount}</div></div>`).join('')}
+      </div>
+    </div>`;
+  },
+
+  viewSet() {
+    const st = this.state;
+    return `<div class="stack">
+      <div class="field"><label for="inp-rate">Valor de la hora</label><input class="input" id="inp-rate" type="number" inputmode="numeric" value="${st.rate}"></div>
+      <div class="field"><label for="inp-night">Plus por hora nocturna (21:00 – 05:00)</label><input class="input" id="inp-night" type="number" inputmode="numeric" value="${st.night}"></div>
+      <div class="field"><label for="inp-extra">Recargo hora extra (más de 8 h/día) %</label><input class="input" id="inp-extra" type="number" inputmode="numeric" value="${st.extraPct}"></div>
+      <div class="field"><label for="inp-hol">Recargo feriado %</label><input class="input" id="inp-hol" type="number" inputmode="numeric" value="${st.holPct}"></div>
+      <div class="fade-rule"></div>
+      <div class="help-text">Los cortes son el 15 y el último día del mes. El cobro cae al 4º día hábil siguiente al corte; sábados y domingos no cuentan. El recargo por feriado sólo se aplica a los días que marqués manualmente como feriado — un domingo sin marcar se paga como jornada normal.</div>
+      <button class="btn btn-secondary btn-block" data-action="reset">Restaurar valores base</button>
+    </div>`;
+  },
+
+  sheet() {
+    const st = this.state, key = st.sheet, d0 = this.dateOf(key);
+    const d1 = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + 1);
+    const sc = this.calc(key, st.draft);
+    const ps = st.draft.start.split(':').map(Number), pe = st.draft.end.split(':').map(Number);
+    const crossesMidnight = (pe[0] * 60 + pe[1]) <= (ps[0] * 60 + ps[1]);
+    const bits = [];
+    if (sc.nightH > 0) bits.push(this.hrs(sc.nightH) + ' nocturnas');
+    if (sc.extra > 0) bits.push(this.hrs(sc.extra) + ' extra');
+    if (sc.holH > 0) bits.push(this.hrs(sc.holH) + ' con recargo feriado');
+    return `<div class="sheet-backdrop" data-action="close"></div>
+      <div class="sheet">
+        <div class="sheet-head"><div class="sheet-title">${this.fmtShort(d0)}</div>
+          <button class="btn btn-ghost" style="margin-left:auto" data-action="close">Cerrar</button></div>
+        <div class="sheet-times">
+          <div class="field" style="flex:1"><label for="inp-start">Entrada</label><input class="input" id="inp-start" type="time" value="${st.draft.start}"></div>
+          <div class="field" style="flex:1"><label for="inp-end">Salida</label><input class="input" id="inp-end" type="time" value="${st.draft.end}"></div>
+        </div>
+        <div class="sheet-flags">
+          <label class="radio"><input type="checkbox" id="inp-holflag" ${st.draft.holiday ? 'checked' : ''}><span class="dot"></span><span>Feriado el ${this.fmtShort(d0)}</span></label>
+          ${crossesMidnight ? `<label class="radio"><input type="checkbox" id="inp-holnextflag" ${st.draft.holidayNext ? 'checked' : ''}><span class="dot"></span><span>Feriado el ${this.fmtShort(d1)} (desde las 00:00)</span></label>` : ''}
+        </div>
+        <div class="sheet-summary">
+          <div><div class="label-sm muted">Horas</div><div class="amt tnum">${this.hrs(sc.hours)}</div><div class="muted" style="font-size:11px">${bits.length ? bits.join(' · ') : 'jornada normal'}</div></div>
+          <div class="to-pay"><div class="label-sm muted">A cobrar</div><div class="amt tnum" style="color:var(--color-accent-400)">${this.money(sc.pay)}</div></div>
+        </div>
+        <div class="sheet-actions">
+          <button class="btn btn-secondary" data-action="delete">Borrar día</button>
+          <button class="btn btn-primary" style="flex:1" data-action="save">Guardar</button>
+        </div>
+      </div>`;
+  },
+};
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => App.init());
+else App.init();
+</script>
